@@ -150,25 +150,113 @@ Full response: [`prompts/ia_response.txt`](prompts/ia_response.txt)
 ---
  
 ## 📁 Project Structure
+
 ```
-ProjectDB_Nom1_Nom2/
+TI404I_ProjectDB_Gastaldo_Rubem/
 ├── README.md
+├── LDM_RolandGarros.docx          # Logical Data Model
+├── Mini-Project_1_EN.pdf          # Part 1 deliverable
+├── Mini_Project2_EN.pdf           # Part 2 deliverable
 ├── prompts/
-│   ├── prompt_analyse_besoins.txt
-│   └── ia_response.txt
-└── mcd/
-    ├── RolandGarros_MCD.loo
-    └── mcd_image.png
+│   ├── prompt_analyse_besoins.txt # MERISE analysis prompt (RICARDO framework)
+│   ├── ia_response.txt            # AI-generated business rules & data dictionary
+│   └── prompt_insertion.txt       # Prompt used to generate sample data
+├── mcd/
+│   ├── RolandGarros_MCD.loo       # Looping source file
+│   └── mcd_image.png              # MCD diagram export
+└── scripts/
+    ├── 1_creation.sql             # DDL - table definitions & foreign keys
+    ├── 2_contraintes.sql          # CHECK constraints (ALTER TABLE)
+    ├── 3_insertion.sql            # Sample data (~590 rows across all 18 tables)
+    └── 4_interrogation.sql        # 20 queries + 4 bonus analytical queries
 ```
  
 ---
  
+## Part 2: Logical Data Model & SQL Implementation
+
+### Logical Data Model (LDM)
+
+Full document: [`LDM_RolandGarros.docx`](LDM_RolandGarros.docx)
+
+### Running the Database
+
+Execute the scripts **in order**:
+
+```bash
+# MySQL
+mysql -u <user> -p <database> < scripts/1_creation.sql
+mysql -u <user> -p <database> < scripts/2_contraintes.sql
+mysql -u <user> -p <database> < scripts/3_insertion.sql
+mysql -u <user> -p <database> < scripts/4_interrogation.sql
+
+# PostgreSQL
+psql -U <user> -d <database> -f scripts/1_creation.sql
+psql -U <user> -d <database> -f scripts/2_contraintes.sql
+psql -U <user> -d <database> -f scripts/3_insertion.sql
+psql -U <user> -d <database> -f scripts/4_interrogation.sql
+```
+
+### `1_creation.sql` - DDL
+
+Creates all 18 tables with primary keys, foreign keys, and referential integrity:
+- `CASCADE` on delete for weak entities (SET → MATCH, EDITION → TOURNAMENT)
+- `SET NULL` for optional relationships (PLAYER → COACH, PLAYER → HOTEL)
+- `RESTRICT` for business-critical references (MATCH → UMPIRE, MATCH → COURT)
+
+### `2_contraintes.sql` - 15 CHECK Constraints
+
+| # | Table | Constraint |
+|---|-------|------------|
+| 1 | player | `player_gender IN ('M', 'F')` |
+| 2 | player | `player_ranking > 0` |
+| 3 | player | `LENGTH(player_nationality) = 3` |
+| 4 | set | scores between 0 and 7 |
+| 5 | set | `set_number` between 1 and 5 |
+| 6 | court | `court_capacity > 0` |
+| 7 | court | `court_surface IN ('Clay', 'Hard', 'Grass', 'Carpet')` |
+| 8 | hotel | `hotel_star_rating` between 1 and 5 |
+| 9 | match | `match_duration > 0` |
+| 10 | match_statistic | `statistic_first_serve_percentage` between 0 and 100 |
+| 11 | match_statistic | `statistic_aces_count >= 0` |
+| 12 | ticket | `ticket_price > 0` |
+| 13 | edition | `edition_end_date > edition_start_date` |
+| 14 | play | `match_result IN ('Winner', 'Loser')` |
+| 15 | category | `category_prize_pool > 0` |
+
+### `3_insertion.sql` - Sample Data (~590 rows, 2 editions)
+
+| Table | Records | Table | Records |
+|-------|---------|-------|---------|
+| tournament | 1 | edition | 2 |
+| category | 5 | player | 40 (20M + 20F) |
+| coach | 20 | sponsor | 5 |
+| hotel | 5 | spectator | 80 (20% with referrer) |
+| umpire | 15 | match | 30 |
+| round | 7 | ticket | 150 |
+| court | 5 | include_category | 10 |
+| ticket_category | 4 | play | 60 (2/match) |
+| | | set | 90 (~3/match) |
+| | | match_statistic | 60 (2/match) |
+
+### `4_interrogation.sql` - Queries (20 + 4 bonus)
+
+| Category | Queries |
+|----------|---------|
+| Projections & Selections | Q1–Q5 |
+| Aggregations | Q6–Q10 |
+| Joins | Q11–Q15 |
+| Subqueries | Q16–Q20 |
+| Bonus — Tournament Director scenario | B1–B4 |
+
+---
+
 ## 🔧 Tools Used
- 
-- **Looping** - MCD modeling
-- **Claude (Anthropic)** - Requirements analysis
-- **MERISE** - Database design methodology
-- **Git/GitHub** - Version control in bash
+
+- **Looping** - MCD modeling (MERISE)
+- **Claude (Anthropic)** - Requirements analysis, project overview with CLAUDE.md and assistant for file 4 (RICARDO framework)
+- **MySQL / PostgreSQL** - SQL execution
+- **Git/GitHub** - Version control
  
 ---
  
